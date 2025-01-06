@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainforest: Data Upload</title>
+</head>
+<body>
+  <h2>Rainforest: Data Upload</h2>
+
+  <!-- Form to accept 14 text inputs and a .ide file -->
+  <form id="fileForm">
+    <label for="ideFile">Select IDE File:</label>
+    <input type="file" id="ideFile" name="ideFile" accept=".ide" required><br><br>
+
+    <div id="textInputs">
+
+      <label for="input1">Comment:</label>
+      <input type="text" id="input1" name="input1" required><br><br>
+
+      <label for="input2">Dunnage:</label>
+      <input type="text" id="input2" name="input2" required><br><br>
+
+      <label for="input3">Dunnage Qty:</label>
+      <input type="text" id="input3" name="input3" required><br><br>
+
+      <label for="input4">Duration:</label>
+      <input type="text" id="input4" name="input4" required><br><br>
+
+      <label for="input5">EndTime:</label>
+      <input type="text" id="input5" name="input5" required><br><br>
+
+      <label for="input6">Location:</label>
+      <input type="text" id="input6" name="input6" required><br><br>
+
+      <label for="input7">Primary Package:</label>
+      <input type="text" id="input7" name="input7" required><br><br>
+
+      <label for="input8">Recipe:</label>
+      <input type="text" id="input8" name="input8" required><br><br>
+
+      <label for="input9">Secondary Package:</label>
+      <input type="text" id="input9" name="input9" required><br><br>
+
+      <label for="input10">Start Time:</label>
+      <input type="text" id="input10" name="input10" required><br><br>
+
+      <label for="input11">Test ID:</label>
+      <input type="text" id="input11" name="input11" required><br><br>
+
+      <label for="input12">Test Type:</label>
+      <input type="text" id="input12" name="input12" required><br><br>
+
+      <label for="input13">Weight:</label>
+      <input type="text" id="input13" name="input13" required><br><br>
+
+      <label for="input14">Work Request:</label>
+      <input type="text" id="input14" name="input14" required><br><br>
+
+    </div>
+
+    <button type="button" onclick="createAndUpload()">Upload Data to S3 Repository</button>
+  </form>
+
+  <script>
+    async function createAndUpload() {
+      const form = document.getElementById('fileForm');
+      const formData = new FormData(form);
+
+      // Validate and extract .ide file
+      const ideFile = document.getElementById('ideFile').files[0];
+      if (!ideFile || !ideFile.name.endsWith('.ide')) {
+        alert('Please upload a valid .ide file.');
+        return;
+      }
+
+      // Collect text inputs
+      const inputs = [];
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith("input")) {
+          inputs.push(value.trim());
+        }
+      }
+
+      // Ensure all inputs are provided
+      if (inputs.length !== 14) {
+        alert('Please fill all 14 text inputs.');
+        return;
+      }
+
+      // Create CSV content
+      const headers = `Comment,Dunnage,DunnageQty,Duration,EndTime,Location,PrimaryPackage,Recipe,SecondaryPackage,StartTime,TestID,TestType,Weight,WorkRequest\n`;
+      const values = inputs.join(',') + "\n";
+      const csvContent = headers + values;
+
+      // Create a Blob for the CSV file
+      const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+      const csvFile = new File([csvBlob], 'metadata.csv', { type: 'text/csv' });
+
+      // Prepare form data for upload
+      const uploadData = new FormData();
+      uploadData.append('ideFile', ideFile); // Append .ide file
+      uploadData.append('csvFile', csvFile); // Append CSV file
+
+      // Replace with your server's endpoint
+      const uploadUrl = 'https://zp3oywjle5.execute-api.us-east-2.amazonaws.com/uploads';
+
+      // Upload files to the server
+      try {
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          body: uploadData,
+        });
+
+        if (response.ok) {
+          alert('Files uploaded successfully!');
+        } else {
+          alert('Failed to upload files.');
+        }
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        alert('An error occurred during file upload.');
+      }
+    }
+  </script>
+    <style type="text/css">
+      body {
+        background: #fff;
+        padding: 20px;
+        font-family: sans-serif;
+      }
+      h2 {
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+      h1, h2 {
+        font-weight: normal;
+        margin-bottom: 15px;
+      }
+      a {
+        color: #42b983;
+      }
+    </style>
+</body>
+</html>
